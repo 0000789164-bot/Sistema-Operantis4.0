@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENAI - Sistema de Gestão de Manutenção 4.0</title>
+    <title>Sistema-Operantis</title>
     <style>
         :root {
             --primary: #0056b3;
@@ -16,62 +16,43 @@
             --card-bg: #ffffff;
             --text-color: #333333;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-color); display: flex; min-height: 100vh; }
-
-        /* Sidebar */
         .sidebar { width: 250px; background-color: var(--primary-dark); color: #fff; padding: 20px 0; display: flex; flex-direction: column; }
         .sidebar h2 { text-align: center; font-size: 1.2rem; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
         .sidebar nav button { width: 100%; padding: 12px 20px; background: none; border: none; color: #cfd8dc; text-align: left; font-size: 0.95rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
         .sidebar nav button:hover, .sidebar nav button.active { background-color: var(--primary); color: #fff; border-left: 4px solid var(--warning); }
-        
         .workshop-banner { margin: auto 15px 15px 15px; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 0.85rem; text-align: center; }
         .btn-demo { background: var(--warning); color: #000; font-weight: bold; border: none; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 8px; }
-
-        /* Main Content */
         .main-content { flex: 1; padding: 20px; overflow-y: auto; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: var(--card-bg); padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-
-        /* Dashboard Cards */
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .kpi-card { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid var(--primary); }
         .kpi-card h3 { font-size: 0.85rem; color: var(--secondary); text-transform: uppercase; margin-bottom: 10px; }
         .kpi-card p { font-size: 1.8rem; font-weight: bold; color: var(--primary-dark); }
-
-        /* Tables & Forms */
         .card { background: var(--card-bg); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
         th, td { padding: 12px; border-bottom: 1px solid #eee; }
         th { background-color: #f8f9fa; color: var(--secondary); }
-
-        /* Status Badges */
         .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
         .badge-success { background: #d4edda; color: #155724; }
         .badge-warning { background: #fff3cd; color: #856404; }
         .badge-danger { background: #f8d7da; color: #721c24; }
-
-        /* Form elements */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 5px; }
         .form-group label { font-size: 0.85rem; font-weight: bold; color: var(--secondary); }
         .form-group input, .form-group select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
         .btn { background: var(--primary); color: #fff; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn:hover { background: var(--primary-dark); }
-
-        /* Demo box */
         .demo-box { background: #e9f5ff; border: 2px dashed var(--primary); padding: 15px; border-radius: 8px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-
-    <!-- Sidebar -->
     <div class="sidebar">
-        <h2>SENAI MANUTENÇÃO 4.0</h2>
+        <h2>Sistema-Operantis</h2>
         <nav>
             <button class="active" onclick="switchTab('dashboard')">📊 Dashboard & KPIs</button>
             <button onclick="switchTab('equipamentos')">🚜 Equipamentos</button>
@@ -85,15 +66,11 @@
             <button class="btn-demo" onclick="simularHorimetroEscavadeira()">⚡ Simular Alerta (500h)</button>
         </div>
     </div>
-
-    <!-- Main Content -->
     <div class="main-content">
         <header>
             <h1 id="page-title">Dashboard de Manutenção</h1>
             <span>Status do Sistema: <strong style="color:var(--success)">● Online</strong></span>
         </header>
-
-        <!-- TAB 1: DASHBOARD -->
         <div id="tab-dashboard" class="tab-content active">
             <div class="kpi-grid">
                 <div class="kpi-card"><h3>Ativos Cadastrados</h3><p id="kpi-total-ativos">0</p></div>
@@ -102,362 +79,46 @@
                 <div class="kpi-card"><h3>MTTR (Tempo Médio P/ Reparo)</h3><p id="kpi-mttr">2.8h</p></div>
                 <div class="kpi-card"><h3>Custo Total (Mês)</h3><p id="kpi-custo-total">R$ 0,00</p></div>
             </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h3>Alertas de Manutenção Preventiva Pendente</h3>
-                </div>
-                <table id="table-alertas">
-                    <thead>
-                        <tr><th>TAG</th><th>Equipamento</th><th>Horímetro Atual</th><th>Limite Preventiva</th><th>Status</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div class="card"><div class="card-header"><h3>Alertas de Manutenção Preventiva Pendente</h3></div><table id="table-alertas"><thead><tr><th>TAG</th><th>Equipamento</th><th>Horímetro Atual</th><th>Limite Preventiva</th><th>Status</th></tr></thead><tbody></tbody></table></div>
         </div>
-
-        <!-- TAB 2: EQUIPAMENTOS -->
         <div id="tab-equipamentos" class="tab-content">
-            <div class="card">
-                <div class="card-header"><h3>Cadastrar Novo Equipamento</h3></div>
-                <form id="form-equipamento" onsubmit="cadastrarEquipamento(event)" class="form-grid">
-                    <div class="form-group"><label>TAG / ID</label><input type="text" id="eq-tag" required placeholder="EX: ESC-001"></div>
-                    <div class="form-group"><label>Nome do Equipamento</label><input type="text" id="eq-nome" required placeholder="Ex: Escavadeira CAT 320"></div>
-                    <div class="form-group"><label>Setor</label><input type="text" id="eq-setor" required placeholder="Ex: Mineração / Obras"></div>
-                    <div class="form-group"><label>Horímetro Atual (h)</label><input type="number" id="eq-horimetro" required placeholder="Ex: 450"></div>
-                    <div class="form-group"><label>Limite P/ Preventiva (h)</label><input type="number" id="eq-limite" required placeholder="Ex: 500"></div>
-                    <div class="form-group" style="justify-content: flex-end;"><button type="submit" class="btn">Cadastrar</button></div>
-                </form>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><h3>Frota e Máquinas Cadastradas</h3></div>
-                <table id="table-equipamentos">
-                    <thead>
-                        <tr><th>TAG</th><th>Nome</th><th>Setor</th><th>Horímetro</th><th>Próx. Preventiva</th><th>Ações</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div class="card"><div class="card-header"><h3>Cadastrar Novo Equipamento</h3></div><form id="form-equipamento" onsubmit="cadastrarEquipamento(event)" class="form-grid"><div class="form-group"><label>TAG / ID</label><input type="text" id="eq-tag" required placeholder="EX: ESC-001"></div><div class="form-group"><label>Nome do Equipamento</label><input type="text" id="eq-nome" required placeholder="Ex: Escavadeira CAT 320"></div><div class="form-group"><label>Setor</label><input type="text" id="eq-setor" required placeholder="Ex: Mineração / Obras"></div><div class="form-group"><label>Horímetro Atual (h)</label><input type="number" id="eq-horimetro" required placeholder="Ex: 450"></div><div class="form-group"><label>Limite P/ Preventiva (h)</label><input type="number" id="eq-limite" required placeholder="Ex: 500"></div><div class="form-group" style="justify-content: flex-end;"><button type="submit" class="btn">Cadastrar</button></div></form></div>
+            <div class="card"><div class="card-header"><h3>Frota e Máquinas Cadastradas</h3></div><table id="table-equipamentos"><thead><tr><th>TAG</th><th>Nome</th><th>Setor</th><th>Horímetro</th><th>Próx. Preventiva</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
         </div>
-
-        <!-- TAB 3: ORDENS DE SERVIÇO -->
         <div id="tab-os" class="tab-content">
-            <div id="demo-box-os" class="demo-box" style="display:none;">
-                <strong>💡 Cenário do Workshop Ativo:</strong> A escavadeira atingiu o horímetro limite! A OS abaixo foi gerada automaticamente para validação do processo.
-            </div>
-
-            <div class="card">
-                <div class="card-header"><h3>Abertura de Ordem de Serviço (OS)</h3></div>
-                <form id="form-os" onsubmit="cadastrarOS(event)" class="form-grid">
-                    <div class="form-group">
-                        <label>Equipamento (TAG)</label>
-                        <select id="os-equipamento" required></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Tipo de Manutenção</label>
-                        <select id="os-tipo">
-                            <option value="Preventiva">Preventiva</option>
-                            <option value="Corretiva">Corretiva</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label>Descrição do Serviço / Sintoma</label><input type="text" id="os-desc" required placeholder="Ex: Troca de filtros e óleo hidráulico"></div>
-                    <div class="form-group"><label>Técnico Responsável</label><input type="text" id="os-tecnico" required placeholder="Ex: João Silva"></div>
-                    <div class="form-group" style="justify-content: flex-end;"><button type="submit" class="btn">Abrir OS</button></div>
-                </form>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><h3>Ordens de Serviço em Andamento e Concluídas</h3></div>
-                <table id="table-os">
-                    <thead>
-                        <tr><th>Nº OS</th><th>TAG</th><th>Tipo</th><th>Descrição</th><th>Técnico</th><th>Status</th><th>Ações</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div id="demo-box-os" class="demo-box" style="display:none;"><strong>💡 Cenário do Workshop Ativo:</strong> A escavadeira atingiu o horímetro limite! A OS abaixo foi gerada automaticamente para validação do processo.</div>
+            <div class="card"><div class="card-header"><h3>Abertura de Ordem de Serviço (OS)</h3></div><form id="form-os" onsubmit="cadastrarOS(event)" class="form-grid"><div class="form-group"><label>Equipamento (TAG)</label><select id="os-equipamento" required></select></div><div class="form-group"><label>Tipo de Manutenção</label><select id="os-tipo"><option value="Preventiva">Preventiva</option><option value="Corretiva">Corretiva</option></select></div><div class="form-group"><label>Descrição do Serviço / Sintoma</label><input type="text" id="os-desc" required placeholder="Ex: Troca de filtros e óleo hidráulico"></div><div class="form-group"><label>Técnico Responsável</label><input type="text" id="os-tecnico" required placeholder="Ex: João Silva"></div><div class="form-group" style="justify-content: flex-end;"><button type="submit" class="btn">Abrir OS</button></div></form></div>
+            <div class="card"><div class="card-header"><h3>Ordens de Serviço em Andamento e Concluídas</h3></div><table id="table-os"><thead><tr><th>Nº OS</th><th>TAG</th><th>Tipo</th><th>Descrição</th><th>Técnico</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
         </div>
-
-        <!-- TAB 4: ESTOQUE DE PEÇAS -->
-        <div id="tab-estoque" class="tab-content">
-            <div class="card">
-                <div class="card-header"><h3>Controle de Estoque e Peças</h3></div>
-                <table id="table-estoque">
-                    <thead>
-                        <tr><th>Código</th><th>Item / Descrição</th><th>Qtd em Estoque</th><th>Mínimo Exigido</th><th>Custo Unitário</th><th>Status Estoque</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- TAB 5: FALHAS E HISTÓRICO -->
-        <div id="tab-historico" class="tab-content">
-            <div class="card">
-                <div class="card-header"><h3>Histórico Geral de Manutenções e Registro de Falhas</h3></div>
-                <table id="table-historico">
-                    <thead>
-                        <tr><th>Data/Hora</th><th>TAG</th><th>Tipo</th><th>Serviço Executado</th><th>Peças Utilizadas</th><th>Custo Total</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+        <div id="tab-estoque" class="tab-content"><div class="card"><div class="card-header"><h3>Controle de Estoque e Peças</h3></div><table id="table-estoque"><thead><tr><th>Código</th><th>Item / Descrição</th><th>Qtd em Estoque</th><th>Mínimo Exigido</th><th>Custo Unitário</th><th>Status Estoque</th></tr></thead><tbody></tbody></table></div></div>
+        <div id="tab-historico" class="tab-content"><div class="card"><div class="card-header"><h3>Histórico Geral de Manutenções e Registro de Falhas</h3></div><table id="table-historico"><thead><tr><th>Data/Hora</th><th>TAG</th><th>Tipo</th><th>Serviço Executado</th><th>Peças Utilizadas</th><th>Custo Total</th></tr></thead><tbody></tbody></table></div></div>
     </div>
-
     <script>
-        // BD Local Fictício para Demonstração Realista
         let equipamentos = [
             { tag: "ESC-001", nome: "Escavadeira Hidráulica CAT 320", setor: "Mineração", horimetro: 485, limite: 500 },
             { tag: "TOR-002", nome: "Torno CNC Romi Centur 30", setor: "Usinagem", horimetro: 1200, limite: 1500 },
             { tag: "CMP-003", nome: "Compressor Parafuso Schulz", setor: "Pneumática", horimetro: 800, limite: 800 }
         ];
-
         let pecas = [
             { codigo: "P-101", nome: "Filtro de Óleo Hidráulico", qtd: 8, min: 3, custo: 150.00 },
             { codigo: "P-102", nome: "Óleo Lubrificante 15W40 (Litro)", qtd: 45, min: 20, custo: 35.00 },
-            { codigo: "P-103", nome: "Correia de Transmissão V", qtd: 2, min: 5, custo: 85.00 } // Estoque crítico
+            { codigo: "P-103", nome: "Correia de Transmissão V", qtd: 2, min: 5, custo: 85.00 }
         ];
-
-        let ordensServico = [
-            { id: 1001, tag: "CMP-003", tipo: "Preventiva", desc: "Revisão periódica de 800h", tecnico: "Carlos Eduardo", status: "Aberta" }
-        ];
-
-        let historico = [
-            { data: "2026-08-15 14:30", tag: "TOR-002", tipo: "Corretiva", desc: "Troca da correia danificada", peca: "Correia de Transmissão V", custo: 85.00 }
-        ];
-
-        // Navegação de Abas
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.sidebar nav button').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            event.currentTarget.classList.add('active');
-
-            const titles = {
-                dashboard: "Dashboard & Indicadores de Desempenho",
-                equipamentos: "Gestão de Ativos e Equipamentos",
-                os: "Controle de Ordens de Serviço (OS)",
-                estoque: "Controle de Peças e Almoxarifado",
-                historico: "Registro de Falhas e Histórico Técnico"
-            };
-            document.getElementById('page-title').innerText = titles[tabId];
-            renderAll();
-        }
-
-        // Renderização dos Dados na Tela
-        function renderAll() {
-            renderDashboard();
-            renderEquipamentos();
-            renderOS();
-            renderEstoque();
-            renderHistorico();
-            populateSelects();
-        }
-
-        function renderDashboard() {
-            document.getElementById('kpi-total-ativos').innerText = equipamentos.length;
-            const abertas = ordensServico.filter(o => o.status === 'Aberta').length;
-            document.getElementById('kpi-os-abertas').innerText = abertas;
-
-            const custoTotal = historico.reduce((acc, h) => acc + h.custo, 0);
-            document.getElementById('kpi-custo-total').innerText = `R$ ${custoTotal.toFixed(2)}`;
-
-            const tbody = document.querySelector('#table-alertas tbody');
-            tbody.innerHTML = '';
-            
-            equipamentos.forEach(eq => {
-                if (eq.horimetro >= eq.limite) {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${eq.tag}</strong></td>
-                            <td>${eq.nome}</td>
-                            <td>${eq.horimetro} hrs</td>
-                            <td>${eq.limite} hrs</td>
-                            <td><span class="badge badge-danger">Preventiva Vencida</span></td>
-                        </tr>
-                    `;
-                }
-            });
-        }
-
-        function renderEquipamentos() {
-            const tbody = document.querySelector('#table-equipamentos tbody');
-            tbody.innerHTML = '';
-            equipamentos.forEach((eq, index) => {
-                const precisaManutencao = eq.horimetro >= eq.limite;
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${eq.tag}</strong></td>
-                        <td>${eq.nome}</td>
-                        <td>${eq.setor}</td>
-                        <td>${eq.horimetro} h</td>
-                        <td>${eq.limite} h</td>
-                        <td>
-                            <button class="btn" style="padding: 4px 8px; font-size:0.75rem;" onclick="adicionarHoras(${index}, 15)">+15h Uso</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderOS() {
-            const tbody = document.querySelector('#table-os tbody');
-            tbody.innerHTML = '';
-            ordensServico.forEach(os => {
-                const badgeClass = os.status === 'Aberta' ? 'badge-danger' : 'badge-success';
-                const acao = os.status === 'Aberta' 
-                    ? `<button class="btn" style="padding: 4px 8px; font-size:0.75rem; background: var(--success);" onclick="concluirOS(${os.id})">Finalizar OS</button>` 
-                    : 'Concluída';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td>#${os.id}</td>
-                        <td><strong>${os.tag}</strong></td>
-                        <td>${os.tipo}</td>
-                        <td>${os.desc}</td>
-                        <td>${os.tecnico}</td>
-                        <td><span class="badge ${badgeClass}">${os.status}</span></td>
-                        <td>${acao}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderEstoque() {
-            const tbody = document.querySelector('#table-estoque tbody');
-            tbody.innerHTML = '';
-            pecas.forEach(p => {
-                const critico = p.qtd <= p.min;
-                const status = critico 
-                    ? `<span class="badge badge-danger">Repor Estoque</span>` 
-                    : `<span class="badge badge-success">OK</span>`;
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${p.codigo}</td>
-                        <td>${p.nome}</td>
-                        <td><strong>${p.qtd}</strong></td>
-                        <td>${p.min}</td>
-                        <td>R$ ${p.custo.toFixed(2)}</td>
-                        <td>${status}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderHistorico() {
-            const tbody = document.querySelector('#table-historico tbody');
-            tbody.innerHTML = '';
-            historico.forEach(h => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${h.data}</td>
-                        <td><strong>${h.tag}</strong></td>
-                        <td>${h.tipo}</td>
-                        <td>${h.desc}</td>
-                        <td>${h.peca}</td>
-                        <td>R$ ${h.custo.toFixed(2)}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        function populateSelects() {
-            const select = document.getElementById('os-equipamento');
-            select.innerHTML = '';
-            equipamentos.forEach(eq => {
-                select.innerHTML += `<option value="${eq.tag}">${eq.tag} - ${eq.nome}</option>`;
-            });
-        }
-
-        // Ações e Regras de Negócio
-        function cadastrarEquipamento(e) {
-            e.preventDefault();
-            equipamentos.push({
-                tag: document.getElementById('eq-tag').value,
-                nome: document.getElementById('eq-nome').value,
-                setor: document.getElementById('eq-setor').value,
-                horimetro: parseFloat(document.getElementById('eq-horimetro').value),
-                limite: parseFloat(document.getElementById('eq-limite').value)
-            });
-            document.getElementById('form-equipamento').reset();
-            renderAll();
-        }
-
-        function cadastrarOS(e) {
-            e.preventDefault();
-            const os = {
-                id: Math.floor(1000 + Math.random() * 9000),
-                tag: document.getElementById('os-equipamento').value,
-                tipo: document.getElementById('os-tipo').value,
-                desc: document.getElementById('os-desc').value,
-                tecnico: document.getElementById('os-tecnico').value,
-                status: 'Aberta'
-            };
-            ordensServico.unshift(os);
-            document.getElementById('form-os').reset();
-            renderAll();
-        }
-
-        function concluirOS(id) {
-            const os = ordensServico.find(o => o.id === id);
-            if (os) {
-                os.status = 'Concluída';
-                // Baixa automática no estoque de 1 filtro e 5L de óleo se for a escavadeira
-                let custoPecas = 150.00;
-                let pecaUsada = "Filtro de Óleo Hidráulico";
-
-                if (pecas[0].qtd > 0) pecas[0].qtd -= 1; // Deduz filtro
-                
-                historico.unshift({
-                    data: new Date().toLocaleString('pt-BR'),
-                    tag: os.tag,
-                    tipo: os.tipo,
-                    desc: os.desc,
-                    peca: pecaUsada,
-                    custo: custoPecas
-                });
-
-                // Zera o horímetro relativo ajustando o limite
-                const eq = equipamentos.find(e => e.tag === os.tag);
-                if (eq) eq.limite = eq.horimetro + 500;
-
-                renderAll();
-            }
-        }
-
-        function adicionarHoras(index, horas) {
-            equipamentos[index].horimetro += horas;
-            renderAll();
-        }
-
-        // SIMULADOR INTERATIVO PARA A APRESENTAÇÃO DO WORKSHOP
-        function simularHorimetroEscavadeira() {
-            const escavadeira = equipamentos.find(e => e.tag === 'ESC-001');
-            if (escavadeira) {
-                escavadeira.horimetro = 500; // Atinge o limite exato
-                
-                // Gera a OS automaticamente se não existir
-                const osExiste = ordensServico.some(o => o.tag === 'ESC-001' && o.status === 'Aberta');
-                if (!osExiste) {
-                    ordensServico.unshift({
-                        id: 5001,
-                        tag: 'ESC-001',
-                        tipo: 'Preventiva',
-                        desc: 'Troca de óleo e filtros - Preventiva 500h',
-                        tecnico: 'Equipe de Manutenção SENAI',
-                        status: 'Aberta'
-                    });
-                }
-
-                document.getElementById('demo-box-os').style.display = 'block';
-                switchTab('os');
-                alert("⚡ SIMULAÇÃO ATIVADA:\nA Escavadeira CAT 320 atingiu 500 horas de uso!\nO sistema gerou um alerta visual no Dashboard e abriu automaticamente uma Ordem de Serviço Preventiva.");
-            }
-        }
-
-        // Inicialização
+        let ordensServico = [{ id: 1001, tag: "CMP-003", tipo: "Preventiva", desc: "Revisão periódica de 800h", tecnico: "Carlos Eduardo", status: "Aberta" }];
+        let historico = [{ data: "2026-08-15 14:30", tag: "TOR-002", tipo: "Corretiva", desc: "Troca da correia danificada", peca: "Correia de Transmissão V", custo: 85.00 }];
+        function switchTab(tabId) { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.sidebar nav button').forEach(el => el.classList.remove('active')); document.getElementById(`tab-${tabId}`).classList.add('active'); event.currentTarget.classList.add('active'); const titles = { dashboard: "Dashboard & Indicadores de Desempenho", equipamentos: "Gestão de Ativos e Equipamentos", os: "Controle de Ordens de Serviço (OS)", estoque: "Controle de Peças e Almoxarifado", historico: "Registro de Falhas e Histórico Técnico" }; document.getElementById('page-title').innerText = titles[tabId]; renderAll(); }
+        function renderAll() { renderDashboard(); renderEquipamentos(); renderOS(); renderEstoque(); renderHistorico(); populateSelects(); }
+        function renderDashboard() { document.getElementById('kpi-total-ativos').innerText = equipamentos.length; const abertas = ordensServico.filter(o => o.status === 'Aberta').length; document.getElementById('kpi-os-abertas').innerText = abertas; const custoTotal = historico.reduce((acc, h) => acc + h.custo, 0); document.getElementById('kpi-custo-total').innerText = `R$ ${custoTotal.toFixed(2)}`; const tbody = document.querySelector('#table-alertas tbody'); tbody.innerHTML = ''; equipamentos.forEach(eq => { if (eq.horimetro >= eq.limite) tbody.innerHTML += `<tr><td><strong>${eq.tag}</strong></td><td>${eq.nome}</td><td>${eq.horimetro} hrs</td><td>${eq.limite} hrs</td><td><span class="badge badge-danger">Preventiva Vencida</span></td></tr>`; }); }
+        function renderEquipamentos() { const tbody = document.querySelector('#table-equipamentos tbody'); tbody.innerHTML = ''; equipamentos.forEach((eq, index) => { tbody.innerHTML += `<tr><td><strong>${eq.tag}</strong></td><td>${eq.nome}</td><td>${eq.setor}</td><td>${eq.horimetro} h</td><td>${eq.limite} h</td><td><button class="btn" style="padding: 4px 8px; font-size:0.75rem;" onclick="adicionarHoras(${index}, 15)">+15h Uso</button></td></tr>`; }); }
+        function renderOS() { const tbody = document.querySelector('#table-os tbody'); tbody.innerHTML = ''; ordensServico.forEach(os => { const badgeClass = os.status === 'Aberta' ? 'badge-danger' : 'badge-success'; const acao = os.status === 'Aberta' ? `<button class="btn" style="padding: 4px 8px; font-size:0.75rem; background: var(--success);" onclick="concluirOS(${os.id})">Finalizar OS</button>` : 'Concluída'; tbody.innerHTML += `<tr><td>#${os.id}</td><td><strong>${os.tag}</strong></td><td>${os.tipo}</td><td>${os.desc}</td><td>${os.tecnico}</td><td><span class="badge ${badgeClass}">${os.status}</span></td><td>${acao}</td></tr>`; }); }
+        function renderEstoque() { const tbody = document.querySelector('#table-estoque tbody'); tbody.innerHTML = ''; pecas.forEach(p => { const critico = p.qtd <= p.min; const status = critico ? `<span class="badge badge-danger">Repor Estoque</span>` : `<span class="badge badge-success">OK</span>`; tbody.innerHTML += `<tr><td>${p.codigo}</td><td>${p.nome}</td><td><strong>${p.qtd}</strong></td><td>${p.min}</td><td>R$ ${p.custo.toFixed(2)}</td><td>${status}</td></tr>`; }); }
+        function renderHistorico() { const tbody = document.querySelector('#table-historico tbody'); tbody.innerHTML = ''; historico.forEach(h => { tbody.innerHTML += `<tr><td>${h.data}</td><td><strong>${h.tag}</strong></td><td>${h.tipo}</td><td>${h.desc}</td><td>${h.peca}</td><td>R$ ${h.custo.toFixed(2)}</td></tr>`; }); }
+        function populateSelects() { const select = document.getElementById('os-equipamento'); select.innerHTML = ''; equipamentos.forEach(eq => { select.innerHTML += `<option value="${eq.tag}">${eq.tag} - ${eq.nome}</option>`; }); }
+        function cadastrarEquipamento(e) { e.preventDefault(); equipamentos.push({ tag: document.getElementById('eq-tag').value, nome: document.getElementById('eq-nome').value, setor: document.getElementById('eq-setor').value, horimetro: parseFloat(document.getElementById('eq-horimetro').value), limite: parseFloat(document.getElementById('eq-limite').value) }); document.getElementById('form-equipamento').reset(); renderAll(); }
+        function cadastrarOS(e) { e.preventDefault(); const os = { id: Math.floor(1000 + Math.random() * 9000), tag: document.getElementById('os-equipamento').value, tipo: document.getElementById('os-tipo').value, desc: document.getElementById('os-desc').value, tecnico: document.getElementById('os-tecnico').value, status: 'Aberta' }; ordensServico.unshift(os); document.getElementById('form-os').reset(); renderAll(); }
+        function concluirOS(id) { const os = ordensServico.find(o => o.id === id); if (os) { os.status = 'Concluída'; let custoPecas = 150.00; let pecaUsada = "Filtro de Óleo Hidráulico"; if (pecas[0].qtd > 0) pecas[0].qtd -= 1; historico.unshift({ data: new Date().toLocaleString('pt-BR'), tag: os.tag, tipo: os.tipo, desc: os.desc, peca: pecaUsada, custo: custoPecas }); const eq = equipamentos.find(e => e.tag === os.tag); if (eq) eq.limite = eq.horimetro + 500; renderAll(); } }
+        function adicionarHoras(index, horas) { equipamentos[index].horimetro += horas; renderAll(); }
+        function simularHorimetroEscavadeira() { const escavadeira = equipamentos.find(e => e.tag === 'ESC-001'); if (escavadeira) { escavadeira.horimetro = 500; const osExiste = ordensServico.some(o => o.tag === 'ESC-001' && o.status === 'Aberta'); if (!osExiste) ordensServico.unshift({ id: 5001, tag: 'ESC-001', tipo: 'Preventiva', desc: 'Troca de óleo e filtros - Preventiva 500h', tecnico: 'Equipe de Manutenção Sistema-Operantis', status: 'Aberta' }); document.getElementById('demo-box-os').style.display = 'block'; switchTab('os'); alert("⚡ SIMULAÇÃO ATIVADA:\nA Escavadeira CAT 320 atingiu 500 horas de uso!\nO sistema gerou um alerta visual no Dashboard e abriu automaticamente uma Ordem de Serviço Preventiva."); } }
         renderAll();
     </script>
 </body>
