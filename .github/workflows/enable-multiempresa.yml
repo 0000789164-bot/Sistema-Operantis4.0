@@ -1,0 +1,75 @@
+name: Integrar camada multiempresa
+
+on:
+  push:
+    branches: [login-multiempresa]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Integrar autenticação e isolamento no index
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+          s = s.replace('let db=null,auth=null,firebaseReady=false;let eq=[];', 'var db=null,auth=null,firebaseReady=false;var eq=[];')
+          s = s.replace('let os=[],plans=[],hist=[];', 'var os=[],plans=[],hist=[];')
+          s = s.replace('await auth.signInAnonymously();firebaseReady=true;await loadCloudData();', 'firebaseReady=true;')
+          if 'auth-multiempresa.js' not in s:
+              s = s.replace('</body>', '<script src="auth-multiempresa.js"></script></body>')
+          p.write_text(s)
+          PY
+      - name: Atualizar regras do Firestore
+        run: |
+          cat > firestore.rules <<'EOF'
+          rules_version = '2';
+          service cloud.firestore {
+            match /databases/{database}/documents {
+              function signedIn() { return request.auth != null; }
+              function myProfile() { return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)); }
+              function inCompany(empresaId) {
+                return signedIn() && myProfile().data.empresaId == empresaId;
+              }
+              function isAdmin(empresaId) {
+                return inCompany(empresaId) && myProfile().data.role == 'admin';
+              }
+
+              match /usuarios/{uid} {
+                allow read: if signedIn() && (request.auth.uid == uid || resource.data.role == 'admin' && resource.data.empresaId == myProfile().data.empresaId);
+                allow create: if signedIn() && request.auth.uid == uid && request.resource.data.uid == uid && request.resource.data.empresaId == uid && request.resource.data.role == 'admin';
+                allow update: if signedIn() && (request.auth.uid == uid || isAdmin(request.resource.data.empresaId));
+                allow delete: if false;
+              }
+
+              match /empresas/{empresaId} {
+                allow create: if signedIn() && request.resource.data.adminUid == request.auth.uid && request.auth.uid == empresaId;
+                allow read, update: if inCompany(empresaId);
+                allow delete: if false;
+
+                match /dados/{docId} {
+                  allow read, write: if inCompany(empresaId) && docId == 'operacional';
+                }
+              }
+
+              match /sistema_operantis/{document} {
+                allow read, write: if false;
+              }
+            }
+          }
+          EOF
+      - name: Commit da integração
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html firestore.rules auth-multiempresa.js
+          git diff --cached --quiet && exit 0
+          git commit -m "feat: integrate multi-company login and data isolation"
+          git push
