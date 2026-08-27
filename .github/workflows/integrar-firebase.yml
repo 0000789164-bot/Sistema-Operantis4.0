@@ -12,31 +12,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Integrar Firebase no index.html
+
+      - name: Integrar Firebase e módulos no index.html
         env:
-          FIREBASE_CONFIG: '{"apiKey":"AIzaSyCajbvJYzCb9DJ0lLai61R6wnqnm1mByTE","authDomain":"sistema-operantis.firebaseapp.com","projectId":"sistema-operantis","storageBucket":"sistema-operantis.firebasestorage.app","messagingSenderId":"958895724786","appId":"1:958895724786:web:6d5a02008b2de76822586b","measurementId":"G-S2KKN51VDN"}'
+          FIREBASE_CONFIG: '{"apiKey":"AIzaSyCajbvJYzCb9DJ0lLIai61R6wnqn1mByTE","authDomain":"sistema-operantis.firebaseapp.com","projectId":"sistema-operantis","storageBucket":"sistema-operantis.firebasestorage.app","messagingSenderId":"958895724786","appId":"1:958895724786:web:6d5a02008b2de76822586b","measurementId":"G-S2KKN51VDM"}'
         run: |
           python - <<'PY'
           from pathlib import Path
           import json, os
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          # Mantém a integração Firebase existente e evita duplicação de scripts.
           if 'firebase-app-compat.js' not in s:
-              cfg=json.loads(os.environ['FIREBASE_CONFIG'])
-              scripts='<script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js"></script><script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>'
-              bridge=f'''<script>const firebaseConfig={json.dumps(cfg,separators=(',',':'))};firebase.initializeApp(firebaseConfig);const db=firebase.firestore();const auth=firebase.auth();const cloudDocs={{equipamentos:'equipamentos',ordens:'ordens_servico',planejamento:'planejamento',estoque:'estoque',historico:'historico'}};async function loadCloudData(){{try{{await auth.signInAnonymously();let found=0;const names=Object.entries(cloudDocs);for(const [key,name] of names){{const snap=await db.collection('sistema_operantis').doc(name).get();if(snap.exists&&Array.isArray(snap.data().items)){{if(key==='equipamentos')eq=snap.data().items;if(key==='ordens')os=snap.data().items;if(key==='planejamento')plans=snap.data().items;if(key==='estoque')parts=snap.data().items;if(key==='historico')hist=snap.data().items;found++;}}}}render();if(!found)await saveCloudData();document.querySelector('.online').textContent='● Firebase conectado';document.querySelector('.online').style.color='var(--ok)';}}catch(err){{console.error('Firebase:',err);document.querySelector('.online').textContent='● Firebase: erro de acesso';document.querySelector('.online').style.color='var(--danger)';}}}}async function saveCloudData(){{try{{await Promise.all([db.collection('sistema_operantis').doc('equipamentos').set({{items:eq,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('ordens_servico').set({{items:os,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('planejamento').set({{items:plans,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('estoque').set({{items:parts,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('historico').set({{items:hist,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}})]);}}catch(err){{console.error('Firebase gravação:',err);}}}}async function initFirebase(){{await loadCloudData()}}</script>'''
-              s=s.replace('</head>',scripts+bridge+'</head>')
-              s=s.replace('e.target.reset();render()', 'e.target.reset();render();saveCloudData()')
-              s=s.replace('x.prog=50;render()', 'x.prog=50;render();saveCloudData()')
-              s=s.replace("tec:x.resp,status:'Concluída'});render()", "tec:x.resp,status:'Concluída'});render();saveCloudData()")
-              s=s.replace("hist.unshift({data:new Date().toLocaleString('pt-BR'),tag:x.tag,tipo:x.tipo,desc:x.desc,peca:'—',custo:0});render()", "hist.unshift({data:new Date().toLocaleString('pt-BR'),tag:x.tag,tipo:x.tipo,desc:x.desc,peca:'—',custo:0});render();saveCloudData()")
-              s=s.replace('render();</script>', 'render();initFirebase();</script>')
-              p.write_text(s,encoding='utf-8')
+              cfg = json.loads(os.environ['FIREBASE_CONFIG'])
+              scripts = '<script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js"></script><script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>'
+              bridge = f'''<script>const firebaseConfig={json.dumps(cfg,separators=(',',':'))};firebase.initializeApp(firebaseConfig);const db=firebase.firestore();const auth=firebase.auth();const cloudDocs={{equipamentos:'equipamentos',ordens:'ordens_servico',planejamento:'planejamento',estoque:'estoque',historico:'historico'}};async function loadCloudData(){{try{{await auth.signInAnonymously();let found=0;for(const [key,name] of Object.entries(cloudDocs)){{const snap=await db.collection('sistema_operantis').doc(name).get();if(snap.exists&&Array.isArray(snap.data().items)){{if(key==='equipamentos')eq=snap.data().items;if(key==='ordens')os=snap.data().items;if(key==='planejamento')plans=snap.data().items;if(key==='estoque')parts=snap.data().items;if(key==='historico')hist=snap.data().items;found++;}}}}render();if(!found)await saveCloudData();}}catch(err){{console.error('Firebase:',err);}}}}async function saveCloudData(){{try{{await Promise.all([db.collection('sistema_operantis').doc('equipamentos').set({{items:eq,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('ordens_servico').set({{items:os,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('planejamento').set({{items:plans,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('estoque').set({{items:parts,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('historico').set({{items:hist,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}})]);}}catch(err){{console.error('Firebase gravação:',err);}}}}async function initFirebase(){{await loadCloudData()}}</script>'''
+              s = s.replace('</head>', scripts + bridge + '</head>')
+
+          # O módulo de falhas precisa ser carregado depois do script principal,
+          # pois ele usa as variáveis eq/os/db definidas pelo index.html.
+          module_tag = '<script src="falhas.js"></script>'
+          if module_tag not in s:
+              s = s.replace('</body>', module_tag + '</body>')
+
+          p.write_text(s, encoding='utf-8')
           PY
+
       - name: Commitar integração
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Integra Firebase Firestore ao Sistema-Operantis"
+          git diff --cached --quiet || git commit -m "Corrige integração de módulos do Sistema-Operantis"
           git push
