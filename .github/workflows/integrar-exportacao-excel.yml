@@ -1,0 +1,49 @@
+name: Integrar exportação Excel
+
+on:
+  push:
+    branches: [feature/exportacao-excel-automatica]
+
+permissions:
+  contents: write
+
+jobs:
+  integrar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Inserir módulo de exportação no index.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          tag = '<script src="exportar-excel.js"></script>'
+
+          if tag not in s:
+              if '</body>' not in s:
+                  raise SystemExit('index.html não possui </body>')
+              s = s.replace('</body>', tag + '</body>', 1)
+              p.write_text(s, encoding='utf-8')
+              print('Módulo de exportação inserido.')
+          else:
+              print('Módulo já está integrado.')
+          PY
+
+      - name: Commitar integração
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração necessária."
+            exit 0
+          fi
+          git commit -m "feat: adiciona botão de exportação Excel"
+          git pull --rebase origin feature/exportacao-excel-automatica
+          git push origin HEAD:feature/exportacao-excel-automatica
