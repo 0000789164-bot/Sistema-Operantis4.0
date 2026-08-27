@@ -1,29 +1,44 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /sistema_operantis/dados {
-      allow read: if request.auth != null;
+    function signedIn() { return request.auth != null; }
+    function myProfile() { return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)); }
+    function inCompany(empresaId) {
+      return signedIn() && myProfile().data.empresaId == empresaId;
+    }
+    function isAdmin(empresaId) {
+      return inCompany(empresaId) && myProfile().data.role == 'admin';
+    }
 
-      // O aplicativo usa autenticação anônima. Mantemos o acesso autenticado,
-      // limitando a escrita ao documento realmente utilizado pelo app.
-      allow create, update: if request.auth != null
-        && request.resource.data.keys().hasOnly([
-          'equipamentos', 'ordens', 'planejamento',
-          'historico', 'falhasAutomaticas', 'atualizadoEm'
-        ])
-        && request.resource.data.equipamentos is list
-        && request.resource.data.ordens is list
-        && request.resource.data.planejamento is list
-        && request.resource.data.historico is list
-        && (
-          !request.resource.data.keys().hasAny(['falhasAutomaticas'])
-          || request.resource.data.falhasAutomaticas is list
-        );
-
+    match /usuarios/{uid} {
+      allow read: if signedIn() && (
+        request.auth.uid == uid ||
+        (resource.data.role == 'admin' && resource.data.empresaId == myProfile().data.empresaId)
+      );
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.empresaId == uid
+        && request.resource.data.role == 'admin';
+      allow update: if signedIn() && (
+        request.auth.uid == uid ||
+        isAdmin(request.resource.data.empresaId)
+      );
       allow delete: if false;
     }
 
-    // Bloqueia documentos adicionais dentro da coleção.
+    match /empresas/{empresaId} {
+      allow create: if signedIn()
+        && request.resource.data.adminUid == request.auth.uid
+        && request.auth.uid == empresaId;
+      allow read, update: if inCompany(empresaId);
+      allow delete: if false;
+
+      match /dados/{docId} {
+        allow read, write: if inCompany(empresaId) && docId == 'operacional';
+      }
+    }
+
     match /sistema_operantis/{document} {
       allow read, write: if false;
     }
