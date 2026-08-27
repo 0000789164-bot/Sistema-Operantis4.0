@@ -1,0 +1,35 @@
+name: Fixar login multiempresa no frontend
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Corrigir integração do login multiempresa
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old="async function initFirebase(){return;try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();auth=firebase.auth();await auth.signInAnonymously();firebaseReady=true;await loadCloudData();document.getElementById('firebase-ok').textContent='✓ Firebase conectado e dados carregados.';document.getElementById('firebase-ok').style.display='block'}catch(e){firebaseReady=false;showError('Firebase não conseguiu autenticar ou carregar os dados. Erro: '+e.message)}}"
+          new="function initFirebase(){try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);db=firebase.firestore();auth=firebase.auth();firebaseReady=true}catch(e){firebaseReady=false;showError('Firebase não conseguiu inicializar: '+e.message)}}"
+          if old not in s:
+              raise SystemExit('initFirebase esperado não encontrado; nenhuma alteração feita')
+          s=s.replace(old,new,1)
+          s=s.replace('let eq=[];','var eq=[];',1)
+          s=s.replace('let os=[],plans=[],hist=[];','var os=[],plans=[],hist=[];',1)
+          s=s.replace('render();initFirebase();</script>','initFirebase();render();</script>',1)
+          p.write_text(s)
+          PY
+      - name: Commitar correção
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: ativar login multiempresa no frontend"
+          git push
