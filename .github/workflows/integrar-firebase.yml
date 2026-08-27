@@ -1,72 +1,10 @@
-name: Limpeza final
-
+name: Retired workflow
 on:
-  push:
-    branches: [main]
-
+  workflow_dispatch:
 permissions:
-  contents: write
-
+  contents: read
 jobs:
-  cleanup:
+  retired:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Remover integração externa do aplicativo
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          s=re.sub(r'<script[^>]+https://www\\.gstatic\\.com/firebase[^>]+></script>', '', s, flags=re.I)
-          s=re.sub(r'const firebaseConfig=.*?;let db=null,auth=null,firebaseReady=false;', 'let db=null,auth=null,appReady=false;', s, flags=re.S)
-          # Remove old cloud functions while retaining the rest of the application.
-          s=re.sub(r'async function loadCloudData\(\).*?(?=async function saveCloudData)', '', s, flags=re.S)
-          s=re.sub(r'async function saveCloudData\(\).*?(?=async function initFirebase|</script>)', '', s, flags=re.S)
-          s=re.sub(r'async function initFirebase\(\).*?(?=</script>)', '', s, flags=re.S)
-          # Replace calls with browser-local persistence.
-          local='''function saveData(){try{localStorage.setItem("operantisData",JSON.stringify({equipamentos:eq,ordens:os,planejamento:plans,historico:hist}))}catch(e){console.error(e)}}\nfunction loadData(){try{const d=JSON.parse(localStorage.getItem("operantisData")||"null");if(d){eq=Array.isArray(d.equipamentos)?d.equipamentos:[];os=Array.isArray(d.ordens)?d.ordens:[];plans=Array.isArray(d.planejamento)?d.planejamento:[];hist=Array.isArray(d.historico)?d.historico:[]}}catch(e){console.error(e)}render()}\n'''
-          s=s.replace('saveCloudData()', 'saveData()').replace('loadCloudData()', 'loadData()').replace('initFirebase()', 'loadData()')
-          # Insert local persistence functions before the closing body script.
-          s=s.replace('</script></body>', local+'</script></body>')
-          s=re.sub(r'firebase-error','app-error',s,flags=re.I)
-          s=re.sub(r'firebase-ok','app-ok',s,flags=re.I)
-          s=re.sub(r'\bFirebase\b','armazenamento local',s,flags=re.I)
-          p.write_text(s,encoding='utf-8')
-          Path('auth-multiempresa.js').unlink(missing_ok=True)
-          Path('firebase.json').unlink(missing_ok=True)
-          Path('firestore.rules').unlink(missing_ok=True)
-          Path('FIREBASE_SETUP.md').unlink(missing_ok=True)
-          Path('.github/workflows/integrar-firebase.yml').unlink(missing_ok=True)
-          PY
-
-      - name: Atualizar documentação
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('README.md')
-          s=p.read_text(encoding='utf-8')
-          s=s.replace('Firebase/Cloud Firestore','armazenamento local do navegador').replace('Firebase Authentication','autenticação da aplicação')
-          s=s.replace('A integração e configuração do Firebase estão sendo aprimoradas, assim como a separação dos dados por empresa.','A arquitetura de dados e autenticação está em desenvolvimento, com foco em isolamento por empresa.')
-          s=s.replace('Firebase','armazenamento externo')
-          p.write_text(s,encoding='utf-8')
-          PY
-
-      - name: Garantir ausência do termo proibido
-        run: |
-          if grep -Rni --exclude-dir=.git 'firebase' .; then
-            echo 'Ainda existem referências ao termo proibido.'
-            exit 1
-          fi
-
-      - name: Gravar resultado
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "remove: eliminar completamente o backend externo" || exit 0
-          git push origin HEAD:main
+      - run: echo "Workflow retired"
