@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -23,14 +23,39 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Limpar integração antiga do código
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r'<script[^>]+https://www\\.gstatic\\.com/[^>]+></script>', '', s, flags=re.I)
+          s=re.sub(r'\b[a-zA-Z]+Config=\{.*?\};let db=null,auth=null,[a-zA-Z]+Ready=false;', 'let db=null,auth=null,appReady=false;', s, flags=re.S)
+          s=re.sub(r'function init[a-zA-Z]+\(\)\{try\{if\([^)]*\.apps\.length\).*?\}\}', '', s, flags=re.S)
+          s=re.sub(r'async function load[a-zA-Z]+\(\)\{.*?\}\s*async function save[a-zA-Z]+\(\)', '', s, flags=re.S)
+          s=re.sub(r'async function save[a-zA-Z]+\(\).*?(?=function showError|function render)', '', s, flags=re.S)
+          s=s.replace('saveCloudData()','saveData()').replace('loadCloudData()','loadData()').replace('initFirebase()','loadData()')
+          s=re.sub(r'firebase-error','app-error',s,flags=re.I).replace('firebase-ok','app-ok')
+          s=re.sub(r'\bFirebase\b','armazenamento local',s,flags=re.I)
+          local='''function saveData(){try{localStorage.setItem("operantisData",JSON.stringify({equipamentos:eq,ordens:os,planejamento:plans,historico:hist}))}catch(e){console.error(e)}}function loadData(){try{const d=JSON.parse(localStorage.getItem("operantisData")||"null");if(d){eq=Array.isArray(d.equipamentos)?d.equipamentos:[];os=Array.isArray(d.ordens)?d.ordens:[];plans=Array.isArray(d.planejamento)?d.planejamento:[];hist=Array.isArray(d.historico)?d.historico:[]}}catch(e){console.error(e)}}'''
+          s=s.replace('</script><script src="falhas.js">',local+'</script><script src="falhas.js">')
+          p.write_text(s,encoding='utf-8')
+          Path('auth-multiempresa.js').unlink(missing_ok=True)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html auth-multiempresa.js
+          if ! git diff --cached --quiet; then git commit -m "refactor: remove legacy backend from application"; git push origin HEAD:main; fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
 
       - name: Deploy
         id: deployment
