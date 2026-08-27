@@ -1,236 +1,40 @@
-/* Sistema-Operantis 4.0 - Registro automático de falhas
- * Integração com o modelo de dados real do index.html.
- */
-(function () {
+/* Falhas automáticas isoladas por empresa */
+(function(){
   'use strict';
-
-  const STORAGE_KEY = 'operantis_falhas_v2';
-  let falhas = [];
-  let iniciado = false;
-
-  const agora = () => new Date().toLocaleString('pt-BR');
-  const esc = (s) => String(s ?? '').replace(/[&<>\"']/g, (m) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;'
-  }[m]));
-
-  function lerLocal() {
-    try {
-      const dados = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      falhas = Array.isArray(dados) ? dados : [];
-    } catch (_) {
-      falhas = [];
+  const session=JSON.parse(sessionStorage.getItem('operantisSession')||'null');
+  if(!session) return;
+  let iniciado=false;
+  const agora=()=>new Date().toLocaleString('pt-BR');
+  function empresa(){ return session.role==='admin' ? (sessionStorage.getItem('operantisEmpresaSelecionada')||'SENAI') : session.empresa; }
+  async function esperar(){ for(let i=0;i<50;i++){ if(typeof firebaseReady!=='undefined'&&firebaseReady&&typeof db!=='undefined'&&db&&typeof eq!=='undefined') return true; await new Promise(r=>setTimeout(r,200)); } return false; }
+  function painel(){
+    const area=document.getElementById('historico'); if(!area||document.getElementById('falhas-auto-card')) return;
+    const c=document.createElement('div'); c.id='falhas-auto-card'; c.className='card';
+    c.innerHTML='<div class="head"><h3>Falhas Automáticas</h3><span id="kpi-falhas-auto" class="badge b-danger">0</span></div><p style="color:var(--muted)">Falhas detectadas automaticamente por limite de manutenção.</p><table><thead><tr><th>Data/Hora</th><th>TAG</th><th>Equipamento</th><th>Severidade</th><th>Status</th></tr></thead><tbody id="falhas-auto-body"></tbody></table>';
+    area.appendChild(c);
+  }
+  function render(){
+    painel(); const body=document.getElementById('falhas-auto-body'); if(!body) return;
+    const abertas=(Array.isArray(hist)?hist:[]).filter(x=>x.tipo==='Falha automática'&&x.status!=='Resolvida');
+    body.innerHTML=abertas.length?abertas.map(x=>'<tr><td>'+x.data+'</td><td><strong>'+x.tag+'</strong></td><td>'+x.equipamento+'</td><td><span class="badge b-danger">Crítica</span></td><td><span class="badge b-danger">Aberta</span></td></tr>').join(''):'<tr><td colspan="5">Nenhuma falha automática registrada.</td></tr>';
+    const k=document.getElementById('kpi-falhas-auto'); if(k) k.textContent=abertas.length;
+  }
+  async function verificar(){
+    if(!(await esperar())||iniciado) return; iniciado=true;
+    for(const e of (Array.isArray(eq)?eq:[])){
+      const h=Number(e.hora), l=Number(e.limite); if(!e.tag||!Number.isFinite(h)||!Number.isFinite(l)||h<l) continue;
+      const existe=(Array.isArray(hist)?hist:[]).some(x=>x.tipo==='Falha automática'&&x.tag===e.tag&&Number(x.hora)===h);
+      if(existe) continue;
+      hist.unshift({data:agora(),tag:e.tag,equipamento:e.nome,tipo:'Falha automática',desc:'Limite de manutenção atingido: '+h+' h / '+l+' h',peca:'-',custo:0,hora:h,status:'Aberta'});
+      const osExiste=(Array.isArray(os)?os:[]).some(x=>x.tag===e.tag&&x.tipo==='Corretiva'&&x.status==='Aberta'&&String(x.desc||'').includes('Falha automática'));
+      if(!osExiste) os.unshift({id:Date.now(),tag:e.tag,tipo:'Corretiva',desc:'Falha automática: limite de manutenção atingido',tec:'A definir',status:'Aberta'});
     }
+    try{ if(typeof saveCloudData==='function') await saveCloudData(); }catch(e){ console.warn(e); }
+    if(typeof render==='function') render(); else render();
+    iniciado=false;
   }
-
-  function salvarLocal() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(falhas)); } catch (_) {}
+  async function iniciar(){
+    await esperar(); render(); await verificar(); setInterval(()=>{ iniciado=false; verificar(); },10000);
   }
-
-  function estadoEquipamentos() {
-    try {
-      return typeof eq !== 'undefined' && Array.isArray(eq) ? eq : [];
-    } catch (_) { return []; }
-  }
-
-  function estadoOrdens() {
-    try {
-      return typeof os !== 'undefined' && Array.isArray(os) ? os : [];
-    } catch (_) { return []; }
-  }
-
-  async function salvarNuvem() {
-    try {
-      if (typeof db === 'undefined' || !db) return;
-      await db.collection('sistema_operantis').doc('dados').set({
-        falhasAutomaticas: falhas,
-        atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-    } catch (e) {
-      console.error('Falhas automáticas - gravação:', e);
-    }
-  }
-
-  async function carregarNuvem() {
-    try {
-      if (typeof db === 'undefined' || !db) return;
-      const snap = await db.collection('sistema_operantis').doc('dados').get();
-      if (snap.exists && Array.isArray(snap.data().falhasAutomaticas)) {
-        falhas = snap.data().falhasAutomaticas;
-        salvarLocal();
-      }
-    } catch (e) {
-      console.warn('Falhas automáticas - leitura:', e);
-    }
-  }
-
-  async function persistir() {
-    salvarLocal();
-    await salvarNuvem();
-  }
-
-  function garantirPainel() {
-    const historico = document.getElementById('historico');
-    if (!historico || document.getElementById('falhas-auto-card')) return;
-
-    const card = document.createElement('div');
-    card.id = 'falhas-auto-card';
-    card.className = 'card';
-    card.innerHTML = `
-      <div class="head">
-        <h3>Falhas Automáticas</h3>
-        <span id="kpi-falhas-auto" class="badge b-danger">0</span>
-      </div>
-      <p style="color:var(--muted);margin-bottom:14px">
-        Alertas gerados automaticamente quando o horímetro atinge ou ultrapassa o limite de manutenção.
-      </p>
-      <table>
-        <thead><tr>
-          <th>Data/Hora</th><th>TAG</th><th>Equipamento</th><th>Detecção</th>
-          <th>Severidade</th><th>Status</th><th>Ação</th>
-        </tr></thead>
-        <tbody id="falhas-auto-body"></tbody>
-      </table>`;
-    historico.appendChild(card);
-  }
-
-  function renderPainel() {
-    garantirPainel();
-    const body = document.getElementById('falhas-auto-body');
-    if (!body) return;
-
-    body.innerHTML = falhas.length
-      ? falhas.map((f) => {
-          const critica = f.severidade === 'Crítica';
-          const aberta = f.status === 'Aberta';
-          return `<tr>
-            <td>${esc(f.data)}</td>
-            <td><strong>${esc(f.tag)}</strong></td>
-            <td>${esc(f.equipamento)}</td>
-            <td>${esc(f.tipo)}</td>
-            <td><span class="badge ${critica ? 'b-danger' : 'b-warn'}">${esc(f.severidade)}</span></td>
-            <td><span class="badge ${aberta ? 'b-danger' : 'b-ok'}">${esc(f.status)}</span></td>
-            <td>${aberta ? `<button class="btn" style="padding:5px 8px" onclick="resolverFalha('${esc(f.id)}')">Resolver</button>` : '-'}</td>
-          </tr>`;
-        }).join('')
-      : '<tr><td colspan="7">Nenhuma falha automática registrada.</td></tr>';
-
-    const kpi = document.getElementById('kpi-falhas-auto');
-    if (kpi) kpi.textContent = falhas.filter((f) => f.status === 'Aberta').length;
-  }
-
-  async function criarOSAutomatica(e) {
-    const ordens = estadoOrdens();
-    if (!ordens) return false;
-
-    const existe = ordens.some((o) =>
-      o.tag === e.tag &&
-      o.tipo === 'Corretiva' &&
-      String(o.desc || '').includes('Falha automática') &&
-      o.status === 'Aberta'
-    );
-    if (existe) return false;
-
-    ordens.unshift({
-      id: Date.now(),
-      tag: e.tag,
-      tipo: 'Corretiva',
-      desc: 'Falha automática: limite de manutenção atingido',
-      tec: 'A definir',
-      status: 'Aberta'
-    });
-
-    try {
-      if (typeof render === 'function') render();
-      if (typeof saveCloudData === 'function') await saveCloudData();
-    } catch (err) {
-      console.error('Falhas automáticas - criação da OS:', err);
-    }
-    return true;
-  }
-
-  async function registrarFalhasAutomaticas() {
-    const equipamentos = estadoEquipamentos();
-    if (!equipamentos.length) {
-      renderPainel();
-      return;
-    }
-
-    let alterou = false;
-
-    for (const e of equipamentos) {
-      const hora = Number(e.hora);
-      const limite = Number(e.limite);
-      if (!e.tag || !Number.isFinite(hora) || !Number.isFinite(limite)) continue;
-      if (hora < limite) continue;
-
-      // Usa 'hora', que é o campo real do index.html. A chave impede duplicações.
-      const chave = `${e.tag}|${hora}|${limite}`;
-      const jaExiste = falhas.some((f) => f.chave === chave);
-      if (jaExiste) continue;
-
-      falhas.unshift({
-        id: `FA-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        data: agora(),
-        tag: e.tag,
-        equipamento: e.nome,
-        setor: e.setor,
-        tipo: hora > limite ? 'Falha por excesso de horímetro' : 'Alerta de manutenção',
-        descricao: `Equipamento atingiu o limite de manutenção (${hora} h / ${limite} h).`,
-        severidade: hora > limite ? 'Crítica' : 'Alta',
-        status: 'Aberta',
-        chave
-      });
-      alterou = true;
-      await criarOSAutomatica(e);
-    }
-
-    if (alterou) await persistir();
-    renderPainel();
-  }
-
-  window.resolverFalha = async function (id) {
-    const f = falhas.find((x) => x.id === id);
-    if (!f || f.status !== 'Aberta') return;
-    f.status = 'Resolvida';
-    f.resolvidaEm = agora();
-    await persistir();
-    renderPainel();
-  };
-
-  async function iniciar() {
-    if (iniciado) return;
-    iniciado = true;
-    lerLocal();
-    garantirPainel();
-
-    // O Firebase do index.html é inicializado de forma assíncrona.
-    for (let i = 0; i < 40; i++) {
-      try {
-        if (typeof firebaseReady !== 'undefined' && firebaseReady && typeof db !== 'undefined' && db) break;
-      } catch (_) {}
-      await new Promise((resolve) => setTimeout(resolve, 250));
-    }
-
-    await carregarNuvem();
-    await registrarFalhasAutomaticas();
-
-    // Reavalia após alterações de equipamento/horímetro.
-    setInterval(registrarFalhasAutomaticas, 5000);
-
-    // Se o módulo principal renderizar, mantém o painel sincronizado.
-    const originalRender = typeof render === 'function' ? render : null;
-    if (originalRender && !window.__operantisRenderComFalhas) {
-      window.__operantisRenderComFalhas = true;
-      window.render = function () {
-        originalRender();
-        renderPainel();
-      };
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', iniciar, { once: true });
-  } else {
-    iniciar();
-  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',iniciar,{once:true}); else iniciar();
 })();
