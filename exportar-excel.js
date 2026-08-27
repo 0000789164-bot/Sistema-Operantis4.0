@@ -29,9 +29,19 @@
     return carregandoXlsx;
   }
 
+  function obterListaGlobal(nome) {
+    try {
+      if (nome === 'eq') return typeof eq !== 'undefined' && Array.isArray(eq) ? eq : [];
+      if (nome === 'os') return typeof os !== 'undefined' && Array.isArray(os) ? os : [];
+      if (nome === 'plans') return typeof plans !== 'undefined' && Array.isArray(plans) ? plans : [];
+      if (nome === 'hist') return typeof hist !== 'undefined' && Array.isArray(hist) ? hist : [];
+      if (nome === 'parts') return typeof parts !== 'undefined' && Array.isArray(parts) ? parts : [];
+    } catch (_) {}
+    return [];
+  }
+
   function tabelaEquipamentos() {
-    const dados = Array.isArray(window.eq) ? window.eq : [];
-    return dados.map(e => ({
+    return obterListaGlobal('eq').map(e => ({
       TAG: escapar(e.tag),
       Equipamento: escapar(e.nome),
       Setor: escapar(e.setor),
@@ -41,8 +51,7 @@
   }
 
   function tabelaOS() {
-    const dados = Array.isArray(window.os) ? window.os : [];
-    return dados.map(o => ({
+    return obterListaGlobal('os').map(o => ({
       OS: escapar(o.id),
       TAG: escapar(o.tag),
       Tipo: escapar(o.tipo),
@@ -53,39 +62,36 @@
   }
 
   function tabelaPlanejamento() {
-    const dados = Array.isArray(window.plans) ? window.plans : [];
-    return dados.map(p => ({
+    return obterListaGlobal('plans').map(p => ({
       Data: escapar(p.data),
-      Equipamento: escapar(p.eq || p.equipamento),
+      Equipamento: escapar(p.tag || p.eq || p.equipamento),
       Tipo: escapar(p.tipo),
       Serviço: escapar(p.serv || p.servico),
       Responsável: escapar(p.resp || p.responsavel),
-      Prioridade: escapar(p.prioridade),
+      Prioridade: escapar(p.pri || p.prioridade),
       Status: escapar(p.status),
-      Progresso: escapar(p.progresso),
+      Progresso: escapar(p.prog ?? p.progresso),
       Duração: escapar(p.duracao)
     }));
   }
 
   function tabelaEstoque() {
-    const dados = Array.isArray(window.parts) ? window.parts : [];
-    return dados.map(p => ({
+    return obterListaGlobal('parts').map(p => ({
       Código: escapar(p[0]),
       Item: escapar(p[1]),
       Quantidade: Number.isFinite(Number(p[2])) ? Number(p[2]) : escapar(p[2]),
       Mínimo: Number.isFinite(Number(p[3])) ? Number(p[3]) : escapar(p[3]),
       'Custo Unitário': Number.isFinite(Number(p[4])) ? Number(p[4]) : escapar(p[4]),
-      Status: Number(p[2]) <= Number(p[3]) ? 'Crítico' : 'Normal'
+      Status: Number(p[2]) < Number(p[3]) ? 'Crítico' : Number(p[2]) === Number(p[3]) ? 'Atenção' : 'Normal'
     }));
   }
 
   function tabelaHistorico() {
-    const dados = Array.isArray(window.hist) ? window.hist : [];
-    return dados.map(h => ({
+    return obterListaGlobal('hist').map(h => ({
       'Data/Hora': escapar(h.data),
       TAG: escapar(h.tag),
       Tipo: escapar(h.tipo),
-      Serviço: escapar(h.serv || h.servico),
+      Serviço: escapar(h.desc || h.serv || h.servico),
       Peça: escapar(h.peca),
       Custo: escapar(h.custo)
     }));
@@ -139,11 +145,11 @@
       adicionarAba(wb, XLSX, 'Falhas', tabelaFalhas());
 
       const resumo = [
-        { Indicador: 'Equipamentos', Quantidade: Array.isArray(window.eq) ? window.eq.length : 0 },
-        { Indicador: 'Ordens de Serviço', Quantidade: Array.isArray(window.os) ? window.os.length : 0 },
-        { Indicador: 'Planejamentos', Quantidade: Array.isArray(window.plans) ? window.plans.length : 0 },
-        { Indicador: 'Itens de estoque', Quantidade: Array.isArray(window.parts) ? window.parts.length : 0 },
-        { Indicador: 'Histórico', Quantidade: Array.isArray(window.hist) ? window.hist.length : 0 },
+        { Indicador: 'Equipamentos', Quantidade: obterListaGlobal('eq').length },
+        { Indicador: 'Ordens de Serviço', Quantidade: obterListaGlobal('os').length },
+        { Indicador: 'Planejamentos', Quantidade: obterListaGlobal('plans').length },
+        { Indicador: 'Itens de estoque', Quantidade: obterListaGlobal('parts').length },
+        { Indicador: 'Histórico', Quantidade: obterListaGlobal('hist').length },
         { Indicador: 'Falhas automáticas', Quantidade: tabelaFalhas().length },
         { Indicador: 'Gerado em', Quantidade: new Date().toLocaleString('pt-BR') }
       ];
@@ -167,7 +173,7 @@
 
   function criarBotao() {
     if (document.getElementById('exportar-excel-btn')) return;
-    const header = document.querySelector('main .main > header, main header');
+    const header = document.querySelector('main header');
     if (!header) return;
 
     const botao = document.createElement('button');
@@ -178,7 +184,6 @@
     botao.title = 'Baixar os dados atuais do sistema em formato Excel';
     botao.style.marginLeft = '12px';
     botao.addEventListener('click', exportarExcel);
-
     header.appendChild(botao);
   }
 
