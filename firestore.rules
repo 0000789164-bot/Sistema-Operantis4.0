@@ -5,22 +5,25 @@ service cloud.firestore {
       allow read: if request.auth != null;
 
       // O aplicativo usa autenticação anônima. Mantemos o acesso autenticado,
-      // mas limitamos a escrita ao único documento realmente usado pelo app.
+      // limitando a escrita ao documento realmente utilizado pelo app.
       allow create, update: if request.auth != null
         && request.resource.data.keys().hasOnly([
-          'equipamentos', 'ordens', 'planejamento', 'historico',
-          'falhasAutomaticas', 'atualizadoEm'
+          'equipamentos', 'ordens', 'planejamento',
+          'historico', 'falhasAutomaticas', 'atualizadoEm'
         ])
         && request.resource.data.equipamentos is list
         && request.resource.data.ordens is list
         && request.resource.data.planejamento is list
         && request.resource.data.historico is list
-        && request.resource.data.falhasAutomaticas is list;
+        && (
+          !request.resource.data.keys().hasAny(['falhasAutomaticas'])
+          || request.resource.data.falhasAutomaticas is list
+        );
 
       allow delete: if false;
     }
 
-    // Bloqueia documentos/coleções adicionais não utilizados pelo aplicativo.
+    // Bloqueia documentos adicionais dentro da coleção.
     match /sistema_operantis/{document} {
       allow read, write: if false;
     }
