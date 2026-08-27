@@ -15,14 +15,14 @@ Sistema de gestão e organização de trabalhos de manutenção, desenvolvido pa
 - Histórico de atividades e manutenções
 - Identificação de falhas e geração de ações corretivas
 - Dashboard para acompanhamento da operação
-- Persistência de dados com Firebase/Cloud Firestore
+- Persistência de dados no navegador
 
 ## 🏗️ Tecnologias
 
-- HTML, CSS e JavaScript
-- Firebase
-- Cloud Firestore
-- Firebase Authentication
+- HTML
+- CSS
+- JavaScript
+- Web Storage do navegador
 - GitHub Pages
 
 ## 🏢 Arquitetura multiempresa
@@ -44,7 +44,7 @@ empresas/{empresaId}
 
 ## 🚧 Status
 
-Projeto em desenvolvimento ativo. A integração e configuração do Firebase estão sendo aprimoradas, assim como a separação dos dados por empresa.
+Projeto em desenvolvimento ativo. A próxima etapa é consolidar autenticação e isolamento por empresa sem depender de um serviço externo de banco.
 
 ## 📁 Repositório
 
