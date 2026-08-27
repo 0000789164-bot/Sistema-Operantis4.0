@@ -1,0 +1,49 @@
+name: Validar código
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validar JavaScript externo
+        run: node --check falhas.js
+
+      - name: Validar JavaScript embutido no index.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import subprocess
+          import tempfile
+
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, flags=re.I | re.S)
+          if not scripts:
+              raise SystemExit('Nenhum script inline encontrado no index.html')
+
+          for i, code in enumerate(scripts, 1):
+              with tempfile.NamedTemporaryFile('w', suffix='.js', encoding='utf-8', delete=False) as f:
+                  f.write(code)
+                  path = f.name
+              result = subprocess.run(['node', '--check', path], text=True, capture_output=True)
+              if result.returncode:
+                  print(result.stderr)
+                  raise SystemExit(f'JavaScript inline inválido no bloco {i}')
+          print(f'{len(scripts)} bloco(s) JavaScript inline validado(s).')
+          PY
