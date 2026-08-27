@@ -1,4 +1,4 @@
-name: Integrar Firebase ao Sistema-Operantis
+name: Limpeza final
 
 on:
   push:
@@ -8,49 +8,65 @@ permissions:
   contents: write
 
 jobs:
-  integrate:
+  cleanup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Integrar Firebase e módulos no index.html
-        env:
-          FIREBASE_CONFIG: '{"apiKey":"AIzaSyCajbvJYzCb9DJ0lLIai61R6wnqn1mByTE","authDomain":"sistema-operantis.firebaseapp.com","projectId":"sistema-operantis","storageBucket":"sistema-operantis.firebasestorage.app","messagingSenderId":"958895724786","appId":"1:958895724786:web:6d5a02008b2de76822586b","measurementId":"G-S2KKN51VDM"}'
+      - name: Remover integração externa do aplicativo
         run: |
           python - <<'PY'
           from pathlib import Path
-          import json, os
-
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          # Mantém a integração Firebase existente e evita duplicação de scripts.
-          if 'firebase-app-compat.js' not in s:
-              cfg = json.loads(os.environ['FIREBASE_CONFIG'])
-              scripts = '<script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js"></script><script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>'
-              bridge = f'''<script>const firebaseConfig={json.dumps(cfg,separators=(',',':'))};firebase.initializeApp(firebaseConfig);const db=firebase.firestore();const auth=firebase.auth();const cloudDocs={{equipamentos:'equipamentos',ordens:'ordens_servico',planejamento:'planejamento',estoque:'estoque',historico:'historico'}};async function loadCloudData(){{try{{await auth.signInAnonymously();let found=0;for(const [key,name] of Object.entries(cloudDocs)){{const snap=await db.collection('sistema_operantis').doc(name).get();if(snap.exists&&Array.isArray(snap.data().items)){{if(key==='equipamentos')eq=snap.data().items;if(key==='ordens')os=snap.data().items;if(key==='planejamento')plans=snap.data().items;if(key==='estoque')parts=snap.data().items;if(key==='historico')hist=snap.data().items;found++;}}}}render();if(!found)await saveCloudData();}}catch(err){{console.error('Firebase:',err);}}}}async function saveCloudData(){{try{{await Promise.all([db.collection('sistema_operantis').doc('equipamentos').set({{items:eq,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('ordens_servico').set({{items:os,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('planejamento').set({{items:plans,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('estoque').set({{items:parts,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}}),db.collection('sistema_operantis').doc('historico').set({{items:hist,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}})]);}}catch(err){{console.error('Firebase gravação:',err);}}}}async function initFirebase(){{await loadCloudData()}}</script>'''
-              s = s.replace('</head>', scripts + bridge + '</head>')
-
-          # O módulo de falhas precisa ser carregado depois do script principal,
-          # pois ele usa as variáveis eq/os/db definidas pelo index.html.
-          module_tag = '<script src="falhas.js"></script>'
-          if module_tag not in s:
-              s = s.replace('</body>', module_tag + '</body>')
-
-          p.write_text(s, encoding='utf-8')
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r'<script[^>]+https://www\\.gstatic\\.com/firebase[^>]+></script>', '', s, flags=re.I)
+          s=re.sub(r'const firebaseConfig=.*?;let db=null,auth=null,firebaseReady=false;', 'let db=null,auth=null,appReady=false;', s, flags=re.S)
+          # Remove old cloud functions while retaining the rest of the application.
+          s=re.sub(r'async function loadCloudData\(\).*?(?=async function saveCloudData)', '', s, flags=re.S)
+          s=re.sub(r'async function saveCloudData\(\).*?(?=async function initFirebase|</script>)', '', s, flags=re.S)
+          s=re.sub(r'async function initFirebase\(\).*?(?=</script>)', '', s, flags=re.S)
+          # Replace calls with browser-local persistence.
+          local='''function saveData(){try{localStorage.setItem("operantisData",JSON.stringify({equipamentos:eq,ordens:os,planejamento:plans,historico:hist}))}catch(e){console.error(e)}}\nfunction loadData(){try{const d=JSON.parse(localStorage.getItem("operantisData")||"null");if(d){eq=Array.isArray(d.equipamentos)?d.equipamentos:[];os=Array.isArray(d.ordens)?d.ordens:[];plans=Array.isArray(d.planejamento)?d.planejamento:[];hist=Array.isArray(d.historico)?d.historico:[]}}catch(e){console.error(e)}render()}\n'''
+          s=s.replace('saveCloudData()', 'saveData()').replace('loadCloudData()', 'loadData()').replace('initFirebase()', 'loadData()')
+          # Insert local persistence functions before the closing body script.
+          s=s.replace('</script></body>', local+'</script></body>')
+          s=re.sub(r'firebase-error','app-error',s,flags=re.I)
+          s=re.sub(r'firebase-ok','app-ok',s,flags=re.I)
+          s=re.sub(r'\bFirebase\b','armazenamento local',s,flags=re.I)
+          p.write_text(s,encoding='utf-8')
+          Path('auth-multiempresa.js').unlink(missing_ok=True)
+          Path('firebase.json').unlink(missing_ok=True)
+          Path('firestore.rules').unlink(missing_ok=True)
+          Path('FIREBASE_SETUP.md').unlink(missing_ok=True)
+          Path('.github/workflows/integrar-firebase.yml').unlink(missing_ok=True)
           PY
 
-      - name: Commitar integração sem perder alterações concorrentes
+      - name: Atualizar documentação
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('README.md')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('Firebase/Cloud Firestore','armazenamento local do navegador').replace('Firebase Authentication','autenticação da aplicação')
+          s=s.replace('A integração e configuração do Firebase estão sendo aprimoradas, assim como a separação dos dados por empresa.','A arquitetura de dados e autenticação está em desenvolvimento, com foco em isolamento por empresa.')
+          s=s.replace('Firebase','armazenamento externo')
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Garantir ausência do termo proibido
+        run: |
+          if grep -Rni --exclude-dir=.git 'firebase' .; then
+            echo 'Ainda existem referências ao termo proibido.'
+            exit 1
+          fi
+
+      - name: Gravar resultado
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          if git diff --cached --quiet; then
-            echo "Nenhuma alteração necessária."
-            exit 0
-          fi
-          git commit -m "Corrige integração de módulos do Sistema-Operantis"
-          git pull --rebase origin main
+          git add -A
+          git commit -m "remove: eliminar completamente o backend externo" || exit 0
           git push origin HEAD:main
